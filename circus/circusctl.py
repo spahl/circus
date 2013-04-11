@@ -124,6 +124,8 @@ class ControllerApp(object):
         else:
             if hasattr(args, 'start'):
                 opts['start'] = args.start
+            if hasattr(args, 'config'):
+                opts['config'] = args.config
 
             if args.endpoint is None and cmd.msg_type != 'dealer':
                 if cmd.msg_type == 'sub':

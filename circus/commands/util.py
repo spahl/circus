@@ -20,6 +20,16 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key == "copy_env":
         return util.to_bool(val)
+    elif key == "copy_path":
+        return util.to_bool(val)
+    elif key == "singleton":
+        return util.to_bool(val)
+    elif key == "use_sockets":
+        return util.to_bool(val)
+    elif key == "autostart":
+        return util.to_bool(val)
+    elif key == "respawn":
+        return util.to_bool(val)
     elif key == "env":
         return util.parse_env_dict(val)
     elif key == "cmd":
@@ -38,6 +48,8 @@ def convert_option(key, val):
         return int(val)
     elif key == 'max_age_variance':
         return int(val)
+    elif key == "priority":
+        return int(val)
 
     raise ArgumentError("unknown key %r" % key)
 
@@ -47,11 +59,14 @@ def validate_option(key, val):
                    'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
                    'flapping_attempts', 'flapping_window', 'retry_in',
                    'max_retry', 'graceful_timeout', 'stdout_stream',
-                   'stderr_stream', 'max_age', 'max_age_variance'):
+                   'stderr_stream', 'max_age', 'max_age_variance',
+                   'singleton', 'hooks', 'rlimits', 'copy_path', 'args',
+                   'use_sockets', 'executable', 'priority', 'autostart',
+                   'respawn'):
         raise MessageError('unknown key %r' % key)
 
     if key in ('numprocesses', 'flapping_attempts', 'max_retry', 'max_age',
-               'max_age_variance'):
+               'max_age_variance', 'priority'):
         if not isinstance(val, int):
             raise MessageError("%r isn't an integer" % key)
 
@@ -60,15 +75,16 @@ def validate_option(key, val):
         if not isinstance(val, (int, float,)):
             raise MessageError("%r isn't a number" % key)
 
-    if key in ('uid', 'gid',):
+    if key in ('uid', 'gid',) and val is not None:
         if not isinstance(val, int) and not isinstance(val, string_types):
             raise MessageError("%r isn't an integer or string" % key)
 
-    if key in ('send_hup', 'shell', 'copy_env'):
+    if key in ('send_hup', 'shell', 'copy_env', 'copy_path', 'singleton',
+               'use_sockets', 'autostart', 'respawn'):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
-    if key in ('env', ):
+    if key in ('env'):
         if not isinstance(val, dict):
             raise MessageError("%r isn't a valid object" % key)
 

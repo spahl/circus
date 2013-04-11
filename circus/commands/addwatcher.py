@@ -1,3 +1,5 @@
+from circus.config import get_config
+from circus.util import parse_env_dict
 from circus.commands.base import Command
 from circus.commands.util import validate_option
 from circus.exc import ArgumentError, MessageError
@@ -41,7 +43,7 @@ class AddWatcher(Command):
 
         ::
 
-            $ circusctl add [--start] <name> <cmd>
+            $ circusctl add [--start] [--config CONFIG] <name> <cmd>
 
         Options
         +++++++
@@ -49,24 +51,41 @@ class AddWatcher(Command):
         - <name>: name of the watcher to create
         - <cmd>: full command line to execute in a process
         - --start: start the watcher immediately
+        - --config: configuration file for watcher options
 
     """
 
     name = "add"
-    options = [('', 'start', False, "start immediately the watcher")]
+    options = [
+        ('', 'start', False, "start immediately the watcher"),
+        ('', 'config', None, "configuration file for watcher options")
+    ]
     properties = ['name', 'cmd']
 
     def message(self, *args, **opts):
-        if len(args) < 2:
+        options = {}
+        if len(args) == 1 and opts.get('config'):
+            config = get_config(opts.get('config'))
+            try:
+                options = next(
+                    w for w in config['watchers'] if w['name'] == args[0]
+                )
+            except StopIteration:
+                raise ArgumentError(
+                    'Watcher "{0}" not present in config'.format(args[0]))
+            if 'env' in config:
+                options['env'] = parse_env_dict(options['env'])
+        elif len(args) < 2:
             raise ArgumentError("number of arguments invalid")
 
-        return self.make_message(name=args[0], cmd=" ".join(args[1:]),
-                                 start=opts.get('start', False))
+        return self.make_message(name=options.pop('name'),
+                                 cmd=options.pop('cmd'),
+                                 start=opts.get('start', False),
+                                 options=options)
 
     def execute(self, arbiter, props):
         options = props.get('options', {})
-        watcher = arbiter.add_watcher(props['name'], props['cmd'],
-                                      args=props.get('args'), **options)
+        watcher = arbiter.add_watcher(props['name'], props['cmd'], **options)
         if props.get('start', False):
             watcher.start()
 
