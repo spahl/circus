@@ -153,6 +153,11 @@ class Process(object):
                 if option not in format_kwargs\
                         and hasattr(self.watcher, option):
                     format_kwargs[option] = getattr(self.watcher, option)
+            if self.watcher.arbiter is not None:
+                for w in self.watcher.arbiter.watchers:
+                    for i, p in enumerate(sorted(w.processes.itervalues())):
+                        format_kwargs['watcher.{}.process.{}.pid'.format(
+                            w.name, i)] = p.pid
 
         cmd = replace_gnu_args(self.cmd, **format_kwargs)
 
