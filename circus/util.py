@@ -421,7 +421,7 @@ def resolve_name(import_name, silent=False):
             raise ImportStringError(import_name, e), None, sys.exc_info()[2]
 
 
-_CIRCUS_VAR = re.compile(r'\$\(circus\.([\w\.]+)\)', re.I)
+_CIRCUS_VAR = re.compile(r'\$\(circus\.([\w\._-]+)\)', re.I)
 
 
 def replace_gnu_args(data, prefix='circus', **options):
@@ -441,11 +441,11 @@ def replace_gnu_args(data, prefix='circus', **options):
             fmt_options[key] = value
 
     if prefix is None:
-        match = re.compile(r'\$\(([\w\.]+)\)', re.I)
+        match = re.compile(r'\$\(([\w\._-]+)\)', re.I)
     elif prefix == 'circus':
         match = _CIRCUS_VAR
     else:
-        match = re.compile(r'\$\(%s\.([\w\.]+)\)' % prefix, re.I)
+        match = re.compile(r'\$\(%s\.([\w\._-]+)\)' % prefix, re.I)
 
     def _repl(matchobj):
         option = matchobj.group(1).lower()
