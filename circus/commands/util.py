@@ -38,6 +38,8 @@ def convert_option(key, val):
         return int(val)
     elif key == 'max_age_variance':
         return int(val)
+    elif key == "dependencies":
+        return val.split() if val else []
 
     raise ArgumentError("unknown key %r" % key)
 
@@ -47,7 +49,8 @@ def validate_option(key, val):
                    'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
                    'flapping_attempts', 'flapping_window', 'retry_in',
                    'max_retry', 'graceful_timeout', 'stdout_stream',
-                   'stderr_stream', 'max_age', 'max_age_variance'):
+                   'stderr_stream', 'max_age', 'max_age_variance',
+                   'dependencies'):
         raise MessageError('unknown key %r' % key)
 
     if key in ('numprocesses', 'flapping_attempts', 'max_retry', 'max_age',

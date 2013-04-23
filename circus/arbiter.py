@@ -183,10 +183,32 @@ class Arbiter(object):
         return arbiter
 
     def iter_watchers(self, reverse=True):
-        watchers = [(watcher.priority, watcher) for watcher in self.watchers]
-        watchers.sort(reverse=reverse)
-        for __, watcher in watchers:
-            yield watcher
+        def _order_by_deps(watchers):
+            name_to_watchers = {w.name: w for w in watchers}
+            tmpwatchers = {k.name: set(v) for k, v in watchers.iteritems()}
+            order = []
+
+            while tmpwatchers:
+                ready = {name for name, deps
+                         in tmpwatchers.iteritems() if not deps}
+                if not ready:
+                    raise ValueError('Circular dependencies not allowed')
+                for name in ready:
+                    del tmpwatchers[name]
+                for deps in tmpwatchers.itervalues():
+                    deps.difference_update(ready)
+                order.append({name_to_watchers[n] for n in ready})
+
+            return order
+
+        order = _order_by_deps({watcher: watcher.dependencies
+                                for watcher in self.watchers})
+        order.sort(reverse=reverse)
+        for batch in order:
+            watchers = [(watcher.priority, watcher) for watcher in batch]
+            watchers.sort(reverse=reverse)
+            for __, watcher in watchers:
+                yield watcher
 
     @debuglog
     def initialize(self):
